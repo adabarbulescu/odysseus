@@ -156,6 +156,29 @@ def test_multiline_caret_navigation_preserved():
 
 
 @pytest.mark.skipif(not _HAS_NODE, reason="node binary not on PATH")
+def test_multiline_recalled_prompt_uses_native_vertical_arrows():
+    text = "line one\nline two"
+    up, down = _run([
+        {
+            "initial": text,
+            "caret": len(text),
+            "history": [text, "older prompt"],
+            "event": {"key": "ArrowUp"},
+        },
+        {
+            "initial": text,
+            "caret": 0,
+            "history": [text],
+            "event": {"key": "ArrowDown"},
+        },
+    ])
+    assert up["value"] == text
+    assert up["prevented"] == [False]
+    assert down["value"] == text
+    assert down["prevented"] == [False]
+
+
+@pytest.mark.skipif(not _HAS_NODE, reason="node binary not on PATH")
 def test_modified_arrow_up_ignored():
     cases = [
         {"initial": "", "event": {"shiftKey": True}},

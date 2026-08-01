@@ -84,6 +84,13 @@ export function wireArrowUpRecall(composer, getUserMessages, options = {}) {
     if (e.isComposing) return;
     if (typeof window !== 'undefined' && window._ghostAutocomplete?.isActive?.()) return;
 
+    const rawCurrentValue = String(composer.value || '');
+    const start = composer.selectionStart ?? rawCurrentValue.length;
+    const end = composer.selectionEnd ?? start;
+    if (start !== end) return;
+    if (e.key === 'ArrowUp' && rawCurrentValue.slice(0, start).includes('\n')) return;
+    if (e.key === 'ArrowDown' && rawCurrentValue.slice(end).includes('\n')) return;
+
     const freshHistory = readHistory();
     const history = freshHistory.length ? freshHistory : recallHistory;
     if (!history.length) {
@@ -91,7 +98,6 @@ export function wireArrowUpRecall(composer, getUserMessages, options = {}) {
       return;
     }
 
-    const rawCurrentValue = String(composer.value || '');
     const currentValue = norm(rawCurrentValue);
     const recalledValue = norm(lastRecalledValue);
     let currentIndex = rawCurrentValue === ''
@@ -143,9 +149,8 @@ export function wireArrowUpRecall(composer, getUserMessages, options = {}) {
       return;
     }
 
-    // ArrowUp owns prompt history in the chat composer. If the current text
-    // is not already a recalled prompt, start from newest instead of letting
-    // the browser move the caret inside the textarea.
+    // ArrowUp owns prompt history only when native textarea movement has no
+    // previous line to move to.
     const nextIndex = currentIndex >= 0 ? Math.min(currentIndex + 1, history.length - 1) : 0;
     const recalled = history[nextIndex];
     if (!recalled) {
